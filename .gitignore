@@ -13,3 +13,5 @@ project.properties
 /app/build/
 /app/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/
 /build/
+id_ed25519
+id_ed25519.pub
