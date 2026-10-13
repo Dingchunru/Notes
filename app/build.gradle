@@ -1,29 +1,29 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace 'net.micode.notes'
+    namespace 'com.dingchunru.app'
     compileSdk 33
 
     useLibrary 'org.apache.http.legacy'
 
     defaultConfig {
-        applicationId "net.micode.notes"
+        applicationId "com.dingchunru.app"
         minSdk 19
         targetSdk 33
         versionCode 1
         versionName "1.0"
-    }
 
-    sourceSets {
-        main {
-            manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['src']
-            res.srcDirs = ['res']
-        }
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+}
+
+dependencies {
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
 }
