@@ -30,6 +30,7 @@ import com.dingchunru.app.data.Notes.CallNote;
 import com.dingchunru.app.data.Notes.DataColumns;
 import com.dingchunru.app.data.Notes.NoteColumns;
 import com.dingchunru.app.data.Notes.TextNote;
+import com.dingchunru.app.tool.NoteCryptoHelper;
 
 import java.util.ArrayList;
 
@@ -38,6 +39,18 @@ public class Note {
     private ContentValues mNoteDiffValues;
     private NoteData mNoteData;
     private static final String TAG = "Note";
+    private boolean mIsEncrypted;
+
+    public void setEncrypted(boolean encrypted) {
+        mIsEncrypted = encrypted;
+        mNoteDiffValues.put(NoteColumns.IS_ENCRYPTED, encrypted ? "1" : "0");
+        mNoteDiffValues.put(NoteColumns.LOCAL_MODIFIED, 1);
+        mNoteDiffValues.put(NoteColumns.MODIFIED_DATE, System.currentTimeMillis());
+    }
+
+    public boolean isEncrypted() {
+        return mIsEncrypted;
+    }
     /**
      * Create a new note id for adding a new note to databases
      */
@@ -191,6 +204,18 @@ public class Note {
 
             if(mTextDataValues.size() > 0) {
                 mTextDataValues.put(DataColumns.NOTE_ID, noteId);
+                if (mIsEncrypted) {
+                    String plain = mTextDataValues.getAsString(DataColumns.CONTENT);
+                    if (plain != null) {
+                        String cipher = NoteCryptoHelper.encryptContent(noteId, plain);
+                        if (cipher == null) {
+                            Log.e(TAG, "Encrypt content failed, abort saving note " + noteId);
+                            mTextDataValues.clear();
+                            return null;
+                        }
+                        mTextDataValues.put(DataColumns.CONTENT, cipher);
+                    }
+                }
                 if (mTextDataId == 0) {
                     mTextDataValues.put(DataColumns.MIME_TYPE, TextNote.CONTENT_ITEM_TYPE);
                     Uri uri = context.getContentResolver().insert(Notes.CONTENT_DATA_URI,

@@ -31,25 +31,25 @@ public class CryptoUtilsTest {
     public void testEncryptDecrypt() throws Exception {
         String plain = "hello world 你好";
 
-        String cipher = CryptoUtils.encrypt(plain, key);
+        String cipher = CryptoUtils.encrypt(plain, key, null);
         assertNotNull(cipher);
-        assertNotEquals(plain, cipher);   // 密文和明文不一样
+        assertNotEquals(plain, cipher);
 
-        String decrypted = CryptoUtils.decrypt(cipher, key);
-        assertEquals(plain, decrypted);    // 解密后一致
+        String decrypted = CryptoUtils.decrypt(cipher, key, null);
+        assertEquals(plain, decrypted);
     }
 
     @Test
     public void testNullInput() throws Exception {
-        assertNull(CryptoUtils.encrypt(null, key));
-        assertNull(CryptoUtils.decrypt(null, key));
+        assertNull(CryptoUtils.encrypt(null, key, null));
+        assertNull(CryptoUtils.decrypt(null, key, null));
     }
 
     @Test
     public void testEmptyString() throws Exception {
         String plain = "";
-        String cipher = CryptoUtils.encrypt(plain, key);
-        assertEquals(plain, CryptoUtils.decrypt(cipher, key));
+        String cipher = CryptoUtils.encrypt(plain, key, null);
+        assertEquals(plain, CryptoUtils.decrypt(cipher, key, null));
     }
 
     @Test
@@ -58,33 +58,30 @@ public class CryptoUtilsTest {
         for (int i = 0; i < 10000; i++) sb.append("abc中文");
         String plain = sb.toString();
 
-        String cipher = CryptoUtils.encrypt(plain, key);
-        assertEquals(plain, CryptoUtils.decrypt(cipher, key));
+        String cipher = CryptoUtils.encrypt(plain, key, null);
+        assertEquals(plain, CryptoUtils.decrypt(cipher, key, null));
     }
 
     @Test
     public void testSameInputDifferentCipher() throws Exception {
         String plain = "same content";
-        String c1 = CryptoUtils.encrypt(plain, key);
-        String c2 = CryptoUtils.encrypt(plain, key);
-        // 每次 IV 随机，两次密文必然不同
+        String c1 = CryptoUtils.encrypt(plain, key, null);
+        String c2 = CryptoUtils.encrypt(plain, key, null);
         assertNotEquals(c1, c2);
-        // 但都能解回原文
-        assertEquals(plain, CryptoUtils.decrypt(c1, key));
-        assertEquals(plain, CryptoUtils.decrypt(c2, key));
+        assertEquals(plain, CryptoUtils.decrypt(c1, key, null));
+        assertEquals(plain, CryptoUtils.decrypt(c2, key, null));
     }
 
     @Test
     public void testWrongKeyFails() throws Exception {
         String plain = "secret";
-        String cipher = CryptoUtils.encrypt(plain, key);
+        String cipher = CryptoUtils.encrypt(plain, key, null);
 
         SecretKey wrongKey = CryptoUtils.deriveKey("wrong-password", salt);
         try {
-            CryptoUtils.decrypt(cipher, wrongKey);
+            CryptoUtils.decrypt(cipher, wrongKey, null);
             throw new AssertionError("应该抛异常但没有");
         } catch (Exception e) {
-            // 预期：AEADBadTagException
             System.out.println("预期异常: " + e.getClass().getSimpleName());
         }
     }
@@ -92,15 +89,14 @@ public class CryptoUtilsTest {
     @Test
     public void testTamperedCipherFails() throws Exception {
         String plain = "secret";
-        String cipher = CryptoUtils.encrypt(plain, key);
+        String cipher = CryptoUtils.encrypt(plain, key, null);
 
-        // 篡改密文中间一个字符
         char[] chars = cipher.toCharArray();
         chars[chars.length / 2] = (chars[chars.length / 2] == 'A') ? 'B' : 'A';
         String tampered = new String(chars);
 
         try {
-            CryptoUtils.decrypt(tampered, key);
+            CryptoUtils.decrypt(tampered, key, null);
             throw new AssertionError("篡改后应该抛异常");
         } catch (Exception e) {
             System.out.println("预期异常: " + e.getClass().getSimpleName());

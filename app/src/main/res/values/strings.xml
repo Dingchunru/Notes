@@ -126,10 +126,25 @@
     <string name="search">Notes</string>
     <string name="datetime_dialog_ok">set</string>
     <string name="datetime_dialog_cancel">cancel</string>
+
     <plurals name="search_results_title">
-         <item quantity="one"><xliff:g id="number" example="1">%1$s</xliff:g> result for \"<xliff:g id="search" example="???">%2$s</xliff:g>\"</item>
+        <item quantity="one"><xliff:g id="number" example="1">%1$s</xliff:g> result for \"<xliff:g id="search" example="???">%2$s</xliff:g>\"</item>
         <!-- Case of 0 or 2 or more results. -->
         <item quantity="other"><xliff:g id="number" example="15">%1$s</xliff:g> results for \"<xliff:g id="search" example="???">%2$s</xliff:g>\"</item>
     </plurals>
+
+    <!-- Encryption -->
+    <string name="menu_encrypt">Encrypt note</string>
+    <string name="menu_decrypt">Decrypt note</string>
+    <string name="password_setup_title">Set password</string>
+    <string name="password_unlock_title">Unlock note</string>
+    <string name="password_hint">Enter password</string>
+    <string name="password_confirm_hint">Confirm password</string>
+    <string name="password_error">Wrong password</string>
+    <string name="password_empty">Password cannot be empty</string>
+    <string name="password_mismatch">Passwords do not match</string>
+    <string name="password_setup_success">Password set</string>
+    <string name="note_encrypted_toast">Note encrypted</string>
+    <string name="note_decrypted_toast">Note decrypted</string>
 
 </resources>

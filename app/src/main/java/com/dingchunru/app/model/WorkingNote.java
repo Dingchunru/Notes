@@ -29,6 +29,7 @@ import com.dingchunru.app.data.Notes.DataColumns;
 import com.dingchunru.app.data.Notes.DataConstants;
 import com.dingchunru.app.data.Notes.NoteColumns;
 import com.dingchunru.app.data.Notes.TextNote;
+import com.dingchunru.app.tool.NoteCryptoHelper;
 import com.dingchunru.app.tool.ResourceParser.NoteBgResources;
 
 
@@ -62,6 +63,8 @@ public class WorkingNote {
 
     private NoteSettingChangedListener mNoteSettingStatusListener;
 
+    private int mIsEncrypted;
+
     public static final String[] DATA_PROJECTION = new String[] {
             DataColumns.ID,
             DataColumns.CONTENT,
@@ -78,8 +81,11 @@ public class WorkingNote {
             NoteColumns.BG_COLOR_ID,
             NoteColumns.WIDGET_ID,
             NoteColumns.WIDGET_TYPE,
-            NoteColumns.MODIFIED_DATE
+            NoteColumns.MODIFIED_DATE,
+            NoteColumns.IS_ENCRYPTED
     };
+
+    private static final int NOTE_IS_ENCRYPTED_COLUMN = 6;
 
     private static final int DATA_ID_COLUMN = 0;
 
@@ -137,6 +143,10 @@ public class WorkingNote {
                 mWidgetType = cursor.getInt(NOTE_WIDGET_TYPE_COLUMN);
                 mAlertDate = cursor.getLong(NOTE_ALERTED_DATE_COLUMN);
                 mModifiedDate = cursor.getLong(NOTE_MODIFIED_DATE_COLUMN);
+                mIsEncrypted  = cursor.getInt(NOTE_IS_ENCRYPTED_COLUMN);
+                if (mIsEncrypted == NoteCryptoHelper.ENCRYPTED) {
+                    mNote.setEncrypted(true);
+                }
             }
             cursor.close();
         } else {
@@ -147,17 +157,26 @@ public class WorkingNote {
     }
 
     private void loadNoteData() {
-        Cursor cursor = mContext.getContentResolver().query(Notes.CONTENT_DATA_URI, DATA_PROJECTION,
-                DataColumns.NOTE_ID + "=?", new String[] {
-                    String.valueOf(mNoteId)
-                }, null);
+        Cursor cursor = mContext.getContentResolver().query(
+                Notes.CONTENT_DATA_URI, DATA_PROJECTION,
+                DataColumns.NOTE_ID + "=?",
+                new String[] { String.valueOf(mNoteId) }, null);
 
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
                     String type = cursor.getString(DATA_MIME_TYPE_COLUMN);
                     if (DataConstants.NOTE.equals(type)) {
-                        mContent = cursor.getString(DATA_CONTENT_COLUMN);
+                        String raw = cursor.getString(DATA_CONTENT_COLUMN);
+
+                        if (mIsEncrypted == NoteCryptoHelper.ENCRYPTED) {
+                            String plain = NoteCryptoHelper.decrypt(mNoteId, raw, mIsEncrypted);
+                            // plain == null 表示会话未解锁
+                            mContent = (plain == null) ? "[已加密，请解锁]" : plain;
+                        } else {
+                            mContent = raw;
+                        }
+
                         mMode = cursor.getInt(DATA_MODE_COLUMN);
                         mNote.setTextDataId(cursor.getLong(DATA_ID_COLUMN));
                     } else if (DataConstants.CALL_NOTE.equals(type)) {
@@ -188,6 +207,13 @@ public class WorkingNote {
     }
 
     public synchronized boolean saveNote() {
+        if (mIsEncrypted == NoteCryptoHelper.ENCRYPTED
+                && mNote.isEncrypted()
+                && NoteCryptoHelper.isLocked()) {
+            Log.w(TAG, "Cannot save encrypted note while locked");
+            return false;
+        }
+
         if (isWorthSaving()) {
             if (!existInDatabase()) {
                 if ((mNoteId = Note.getNewNoteId(mContext, mFolderId)) == 0) {
@@ -210,6 +236,18 @@ public class WorkingNote {
         } else {
             return false;
         }
+    }
+
+    public void setEncrypted(boolean encrypted) {
+        int val = encrypted ? NoteCryptoHelper.ENCRYPTED : NoteCryptoHelper.NOT_ENCRYPTED;
+        if (val != mIsEncrypted) {
+            mIsEncrypted = val;
+            mNote.setEncrypted(encrypted);
+        }
+    }
+
+    public int getIsEncrypted() {
+        return mIsEncrypted;
     }
 
     public boolean existInDatabase() {

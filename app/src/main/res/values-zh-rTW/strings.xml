@@ -124,4 +124,17 @@
         <item quantity="other"><xliff:g id="NUMBER">%1$s</xliff:g> 條符合”<xliff:g id="SEARCH">%2$s</xliff:g>“的搜尋結果</item>
     </plurals>
 
+    <string name="menu_encrypt">加密便籤</string>
+    <string name="menu_decrypt">解密便籤</string>
+    <string name="password_setup_title">設定密碼</string>
+    <string name="password_unlock_title">解鎖便籤</string>
+    <string name="password_hint">請輸入密碼</string>
+    <string name="password_confirm_hint">請再次輸入密碼</string>
+    <string name="password_error">密碼錯誤</string>
+    <string name="password_empty">密碼不能為空</string>
+    <string name="password_mismatch">兩次輸入不一致</string>
+    <string name="password_setup_success">密碼設定成功</string>
+    <string name="note_encrypted_toast">便籤已加密</string>
+    <string name="note_decrypted_toast">便籤已解密</string>
+
 </resources>

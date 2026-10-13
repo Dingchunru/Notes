@@ -123,4 +123,17 @@
         <item quantity="other"><xliff:g id="NUMBER">%1$s</xliff:g> 条符合“<xliff:g id="SEARCH">%2$s</xliff:g>”的搜索结果</item>
     </plurals>
 
+    <string name="menu_encrypt">加密便签</string>
+    <string name="menu_decrypt">解密便签</string>
+    <string name="password_setup_title">设置密码</string>
+    <string name="password_unlock_title">解锁便签</string>
+    <string name="password_hint">请输入密码</string>
+    <string name="password_confirm_hint">请再次输入密码</string>
+    <string name="password_error">密码错误</string>
+    <string name="password_empty">密码不能为空</string>
+    <string name="password_mismatch">两次输入不一致</string>
+    <string name="password_setup_success">密码设置成功</string>
+    <string name="note_encrypted_toast">便签已加密</string>
+    <string name="note_decrypted_toast">便签已解密</string>
+
 </resources>

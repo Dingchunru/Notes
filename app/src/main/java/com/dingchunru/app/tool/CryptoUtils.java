@@ -32,6 +32,9 @@ public class CryptoUtils {
      * 从用户密钥派生 AES 密钥
      */
     public static SecretKey deriveKey(String password, byte[] salt) throws Exception {
+        if (password == null || salt == null) {
+            throw new IllegalArgumentException("password/salt must not be null");
+        }
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, PBKDF2_ITERATIONS, AES_KEY_LENGTH);
         SecretKeyFactory factory = SecretKeyFactory.getInstance(PBKDF2_ALGO);
         byte[] keyBytes = factory.generateSecret(spec).getEncoded();
@@ -40,7 +43,7 @@ public class CryptoUtils {
     /**
      * 加密
      */
-    public static String encrypt(String plain, SecretKey key) throws Exception{
+    public static String encrypt(String plain, SecretKey key, String aad) throws Exception{
         if (plain == null)
             return null;
 
@@ -50,6 +53,10 @@ public class CryptoUtils {
         Cipher cipher = Cipher.getInstance(AES_MODE);
         GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
         cipher.init(Cipher.ENCRYPT_MODE, key, spec);
+
+        if (aad != null) {
+            cipher.updateAAD(aad.getBytes(StandardCharsets.UTF_8));
+        }
 
         byte[] cipherBytes = cipher.doFinal(plain.getBytes(StandardCharsets.UTF_8));
 
@@ -63,10 +70,13 @@ public class CryptoUtils {
     /**
      * 解密
      */
-    public static String decrypt(String encoded, SecretKey key) throws Exception {
+    public static String decrypt(String encoded, SecretKey key, String aad) throws Exception {
         if (encoded == null) return null;
 
         byte[] combined = Base64.decode(encoded, Base64.NO_WRAP);
+        if (combined.length <= GCM_IV_LENGTH + GCM_TAG_LENGTH / 8) {
+            throw new IllegalArgumentException("cipher text too short");
+        }
 
         byte[] iv = new byte[GCM_IV_LENGTH];
         System.arraycopy(combined, 0, iv, 0, GCM_IV_LENGTH);
@@ -77,6 +87,10 @@ public class CryptoUtils {
         Cipher cipher = Cipher.getInstance(AES_MODE);
         GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
         cipher.init(Cipher.DECRYPT_MODE, key, spec);
+
+        if (aad != null) {
+            cipher.updateAAD(aad.getBytes(StandardCharsets.UTF_8));
+        }
 
         byte[] plainBytes = cipher.doFinal(cipherBytes);
         return new String(plainBytes, StandardCharsets.UTF_8);

@@ -58,6 +58,8 @@ import com.dingchunru.app.data.Notes.TextNote;
 import com.dingchunru.app.model.WorkingNote;
 import com.dingchunru.app.model.WorkingNote.NoteSettingChangedListener;
 import com.dingchunru.app.tool.DataUtils;
+import com.dingchunru.app.tool.KeyManager;
+import com.dingchunru.app.tool.NoteCryptoHelper;
 import com.dingchunru.app.tool.ResourceParser;
 import com.dingchunru.app.tool.ResourceParser.TextAppearanceResources;
 import com.dingchunru.app.ui.DateTimePickerDialog.OnDateTimeSetListener;
@@ -210,6 +212,10 @@ public class NoteEditActivity extends Activity implements OnClickListener,
                     finish();
                     return false;
                 }
+                if (mWorkingNote.getIsEncrypted() == NoteCryptoHelper.ENCRYPTED
+                        && KeyManager.getSessionKey() == null) {
+                    promptUnlock();
+                }
             }
             getWindow().setSoftInputMode(
                     WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
@@ -262,6 +268,30 @@ public class NoteEditActivity extends Activity implements OnClickListener,
         return true;
     }
 
+    /**
+     * 加密便签未解锁时：禁用编辑、弹密码框
+     */
+    private void promptUnlock() {
+        mNoteEditor.setEnabled(false);   // 未解锁禁止编辑
+
+        PasswordDialog.showUnlock(this, getString(R.string.password_unlock_title), pwd -> {
+            try {
+                if (KeyManager.unlock(this, pwd)) {
+                    // 解锁成功：重新加载便签
+                    mWorkingNote = WorkingNote.load(this, mWorkingNote.getNoteId());
+                    initNoteScreen();
+                    mNoteEditor.setEnabled(true);
+                } else {
+                    showToast(R.string.password_error);
+                    finish();   // 密码错误退出
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                finish();
+            }
+        });
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -293,6 +323,12 @@ public class NoteEditActivity extends Activity implements OnClickListener,
          * is not ready
          */
         showAlertHeader();
+
+        // 加密便签未解锁：禁用编辑并弹密码框
+        if (mWorkingNote.getIsEncrypted() == NoteCryptoHelper.ENCRYPTED
+                && KeyManager.getSessionKey() == null) {
+            promptUnlock();
+        }
     }
 
     private void showAlertHeader() {
@@ -502,6 +538,12 @@ public class NoteEditActivity extends Activity implements OnClickListener,
         } else {
             menu.findItem(R.id.menu_delete_remind).setVisible(false);
         }
+
+        boolean encrypted = mWorkingNote.getIsEncrypted() == NoteCryptoHelper.ENCRYPTED;
+        MenuItem encItem = menu.findItem(R.id.menu_encrypt);
+        MenuItem decItem = menu.findItem(R.id.menu_decrypt);
+        if (encItem != null) encItem.setVisible(!encrypted);
+        if (decItem != null) decItem.setVisible(encrypted);
         return true;
     }
 
@@ -539,8 +581,55 @@ public class NoteEditActivity extends Activity implements OnClickListener,
             setReminder();
         } else if (itemId == R.id.menu_delete_remind) {
             mWorkingNote.setAlertDate(0, false);
+        } else if (itemId == R.id.menu_encrypt) {
+            handleEncrypt();
+        } else if (itemId == R.id.menu_decrypt) {
+            handleDecrypt();
         }
         return true;
+    }
+
+    /**
+     * 加密当前便签
+     */
+    private void handleEncrypt() {
+        if (!KeyManager.isPasswordSet(this)) {
+            // 还没设过密码：先引导设置
+            PasswordDialog.showSetup(this, getString(R.string.password_setup_title), pwd -> {
+                try {
+                    KeyManager.setupPassword(this, pwd);
+                    mWorkingNote.setEncrypted(true);
+                    mWorkingNote.saveNote();
+                    showToast(R.string.note_encrypted_toast);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        } else {
+            // 已有密码：直接加密
+            mWorkingNote.setEncrypted(true);
+            mWorkingNote.saveNote();
+            showToast(R.string.note_encrypted_toast);
+        }
+    }
+
+    /**
+     * 解密当前便签
+     */
+    private void handleDecrypt() {
+        PasswordDialog.showUnlock(this, getString(R.string.password_unlock_title), pwd -> {
+            try {
+                if (!KeyManager.unlock(this, pwd)) {
+                    showToast(R.string.password_error);
+                    return;
+                }
+                mWorkingNote.setEncrypted(false);
+                mWorkingNote.saveNote();
+                showToast(R.string.note_decrypted_toast);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void setReminder() {

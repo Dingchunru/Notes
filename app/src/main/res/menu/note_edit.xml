@@ -49,4 +49,14 @@
     <item
         android:id="@+id/menu_delete_remind"
         android:title="@string/menu_remove_remind" />
+
+    <item
+        android:id="@+id/menu_encrypt"
+        android:title="@string/menu_encrypt"
+        android:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_decrypt"
+        android:title="@string/menu_decrypt"
+        android:showAsAction="never" />
 </menu>
