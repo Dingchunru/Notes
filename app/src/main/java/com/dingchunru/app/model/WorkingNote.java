@@ -23,7 +23,13 @@ import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.Log;
 
-
+import com.dingchunru.app.data.Notes;
+import com.dingchunru.app.data.Notes.CallNote;
+import com.dingchunru.app.data.Notes.DataColumns;
+import com.dingchunru.app.data.Notes.DataConstants;
+import com.dingchunru.app.data.Notes.NoteColumns;
+import com.dingchunru.app.data.Notes.TextNote;
+import com.dingchunru.app.tool.ResourceParser.NoteBgResources;
 
 
 public class WorkingNote {

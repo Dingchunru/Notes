@@ -55,7 +55,7 @@ public class CryptoUtils {
 
         byte[] combined = new byte[iv.length + cipherBytes.length];
         System.arraycopy(iv, 0, combined, 0, iv.length);
-        System.arraycopy(iv, 0 , combined, iv.length, cipherBytes.length);
+        System.arraycopy(cipherBytes, 0, combined, iv.length, cipherBytes.length);
 
         return Base64.encodeToString(combined, Base64.NO_WRAP);
     }
